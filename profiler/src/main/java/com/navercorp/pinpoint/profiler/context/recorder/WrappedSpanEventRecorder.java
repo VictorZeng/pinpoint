@@ -17,7 +17,6 @@ package com.navercorp.pinpoint.profiler.context.recorder;
 
 
 import com.navercorp.pinpoint.bootstrap.context.AsyncContext;
-import com.navercorp.pinpoint.bootstrap.context.AsyncState;
 import com.navercorp.pinpoint.bootstrap.context.ParsingResult;
 import com.navercorp.pinpoint.bootstrap.context.SpanEventRecorder;
 import com.navercorp.pinpoint.common.trace.AnnotationKey;
@@ -45,20 +44,17 @@ public class WrappedSpanEventRecorder extends AbstractRecorder implements SpanEv
     private static final Logger logger = LoggerFactory.getLogger(DefaultTrace.class.getName());
     private static final boolean isDebug = logger.isDebugEnabled();
 
-    private final TraceRoot traceRoot;
-    private final AsyncContextFactory asyncContextFactory;
-    private final AsyncState asyncState;
+    protected final TraceRoot traceRoot;
+    protected final AsyncContextFactory asyncContextFactory;
 
     private SpanEvent spanEvent;
 
-    public WrappedSpanEventRecorder(TraceRoot traceRoot, AsyncContextFactory asyncContextFactory, final StringMetaDataService stringMetaDataService, final SqlMetaDataService sqlMetaCacheService, AsyncState asyncState) {
+    public WrappedSpanEventRecorder(TraceRoot traceRoot, AsyncContextFactory asyncContextFactory,
+                                    final StringMetaDataService stringMetaDataService, final SqlMetaDataService sqlMetaCacheService) {
         super(stringMetaDataService, sqlMetaCacheService);
-        this.traceRoot = Assert.requireNonNull(traceRoot, "traceRoot must not be null");
+        this.traceRoot = Assert.requireNonNull(traceRoot, "traceRoot");
 
-        this.asyncContextFactory = Assert.requireNonNull(asyncContextFactory, "asyncContextFactory must not be null");
-
-        // @Nullable
-        this.asyncState = asyncState;
+        this.asyncContextFactory = Assert.requireNonNull(asyncContextFactory, "asyncContextFactory");
     }
 
     public void setWrapped(final SpanEvent spanEvent) {
@@ -129,7 +125,6 @@ public class WrappedSpanEventRecorder extends AbstractRecorder implements SpanEv
     @Override
     public AsyncContext recordNextAsyncContext() {
         final TraceRoot traceRoot = this.traceRoot;
-
         final AsyncId asyncIdObject = getNextAsyncId();
         final AsyncContext asyncContext = asyncContextFactory.newAsyncContext(traceRoot, asyncIdObject);
         return asyncContext;
@@ -137,27 +132,8 @@ public class WrappedSpanEventRecorder extends AbstractRecorder implements SpanEv
 
     @Override
     public AsyncContext recordNextAsyncContext(boolean asyncStateSupport) {
-
-        final TraceRoot traceRoot = this.traceRoot;
-        final AsyncId asyncIdObject = getNextAsyncId();
-
-        final AsyncState asyncState = this.asyncState;
-        if (asyncStateSupport && asyncState != null) {
-            asyncState.setup();
-            final AsyncContext asyncContext = asyncContextFactory.newAsyncContext(traceRoot, asyncIdObject, asyncState);
-            return asyncContext;
-        }
-
-        final AsyncContext asyncContext = asyncContextFactory.newAsyncContext(traceRoot, asyncIdObject);
-        return asyncContext;
+        return recordNextAsyncContext();
     }
-
-
-//    @Deprecated
-//    @Override
-//    public void recordNextAsyncId(int nextAsyncId) {
-//        spanEvent.setNextAsyncId(nextAsyncId);
-//    }
 
 
     @Override
@@ -222,7 +198,7 @@ public class WrappedSpanEventRecorder extends AbstractRecorder implements SpanEv
         return spanEvent.attachFrameObject(frameObject);
     }
 
-    private AsyncId getNextAsyncId() {
+    protected AsyncId getNextAsyncId() {
         AsyncId nextAsyncId = spanEvent.getAsyncIdObject();
         if (nextAsyncId == null) {
             nextAsyncId = asyncContextFactory.newAsyncId();

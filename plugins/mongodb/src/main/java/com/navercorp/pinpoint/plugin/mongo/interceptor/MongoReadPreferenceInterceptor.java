@@ -37,10 +37,10 @@ public class MongoReadPreferenceInterceptor implements AroundInterceptor {
 
     public MongoReadPreferenceInterceptor(TraceContext traceContext, MethodDescriptor descriptor) {
         if (traceContext == null) {
-            throw new NullPointerException("traceContext must not be null");
+            throw new NullPointerException("traceContext");
         }
         if (descriptor == null) {
-            throw new NullPointerException("descriptor must not be null");
+            throw new NullPointerException("descriptor");
         }
     }
 
@@ -57,12 +57,11 @@ public class MongoReadPreferenceInterceptor implements AroundInterceptor {
             logger.afterInterceptor(target, args, result, throwable);
         }
 
-        DatabaseInfo databaseInfo;
-        if (target instanceof DatabaseInfoAccessor) {
-            databaseInfo = ((DatabaseInfoAccessor) target)._$PINPOINT$_getDatabaseInfo();
-        } else {
-            databaseInfo = UnKnownDatabaseInfo.INSTANCE;
+        if (args == null) {
+            return;
         }
+
+        DatabaseInfo databaseInfo = DatabaseInfoUtils.getDatabaseInfo(target, UnKnownDatabaseInfo.MONGO_INSTANCE);
 
         String readPreference = ((ReadPreference) args[0]).getName();
 

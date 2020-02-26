@@ -46,7 +46,7 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(PinpointPluginTestSuite.class)
 @PinpointAgent(AgentPath.PATH)
-@Dependency({"com.alibaba:dubbo:2.5.3", "org.mockito:mockito-all:1.8.4"})
+@Dependency({"com.alibaba:dubbo:[2.5.x,]", "org.mockito:mockito-all:1.8.4"})
 public class DubboConsumerIT {
 
     @Mock
@@ -64,6 +64,7 @@ public class DubboConsumerIT {
     @Test
     public void testConsumer() throws NoSuchMethodException {
         abstractClusterInvoker = new MockInvoker<Demo>(Demo.class, url);
+        when(rpcInvocation.getInvoker()).thenReturn(abstractClusterInvoker);
         try {
             abstractClusterInvoker.invoke(rpcInvocation);
         } catch (RpcException e) {
@@ -79,6 +80,7 @@ public class DubboConsumerIT {
     @Test
     public void testConsumerMonitor() {
         abstractClusterInvoker = mock(AbstractInvoker.class);
+        when(rpcInvocation.getInvoker()).thenReturn(abstractClusterInvoker);
         when(abstractClusterInvoker.getInterface()).thenReturn(MonitorService.class);
         try {
             abstractClusterInvoker.invoke(rpcInvocation);

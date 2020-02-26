@@ -27,7 +27,7 @@ import com.navercorp.pinpoint.bootstrap.plugin.test.ExpectedTrace;
 import com.navercorp.pinpoint.bootstrap.plugin.test.ExpectedTraceField;
 import com.navercorp.pinpoint.bootstrap.plugin.test.PluginTestVerifier;
 import com.navercorp.pinpoint.bootstrap.plugin.test.TraceType;
-import com.navercorp.pinpoint.common.service.ServiceTypeRegistryService;
+import com.navercorp.pinpoint.loader.service.ServiceTypeRegistryService;
 import com.navercorp.pinpoint.common.trace.AnnotationKey;
 import com.navercorp.pinpoint.common.trace.LoggingInfo;
 import com.navercorp.pinpoint.common.trace.ServiceType;
@@ -37,6 +37,7 @@ import com.navercorp.pinpoint.common.util.Assert;
 import com.navercorp.pinpoint.common.util.IntStringStringValue;
 import com.navercorp.pinpoint.common.util.IntStringValue;
 import com.navercorp.pinpoint.common.util.StopWatch;
+import com.navercorp.pinpoint.common.util.StringStringValue;
 import com.navercorp.pinpoint.common.util.StringUtils;
 import com.navercorp.pinpoint.profiler.context.Annotation;
 import com.navercorp.pinpoint.profiler.context.AsyncSpanChunk;
@@ -72,7 +73,7 @@ public class PluginVerifierExternalAdaptor implements PluginTestVerifier {
     private final ApplicationContextHandler handler;
 
     public PluginVerifierExternalAdaptor(DefaultApplicationContext applicationContext) {
-        this.applicationContext = Assert.requireNonNull(applicationContext, "applicationContext must not be null");
+        this.applicationContext = Assert.requireNonNull(applicationContext, "applicationContext");
         this.handler = new ApplicationContextHandler(applicationContext);
     }
 
@@ -697,6 +698,8 @@ public class PluginVerifierExternalAdaptor implements PluginTestVerifier {
 
             if (expectedAnnotationKey == AnnotationKey.SQL_ID && expect instanceof ExpectedSql) {
                 verifySql((ExpectedSql) expect, actualAnnotation);
+            } else if (expect.getValue() instanceof StringStringValue){
+                verifyStringStringValue(((StringStringValue)expect.getValue()), actualAnnotation);
             } else {
                 Object expectedValue = expect.getValue();
 
@@ -714,6 +717,18 @@ public class PluginVerifierExternalAdaptor implements PluginTestVerifier {
                 }
             }
         }
+    }
+
+    private void verifyStringStringValue(StringStringValue value, Annotation actualAnnotation) {
+        StringStringValue annotationValue = (StringStringValue) actualAnnotation.getValue();
+        if (!Objects.equal(value.getStringValue1(), annotationValue.getStringValue1())) {
+            throw new AssertionError("Expected [" + value.getStringValue1() + "] but was [" + annotationValue.getStringValue1() + "]");
+        }
+
+        if (!Objects.equal(value.getStringValue2(), annotationValue.getStringValue2())) {
+            throw new AssertionError("Expected [" + value.getStringValue2() + "] but was [" + annotationValue.getStringValue2() + "]");
+        }
+
     }
 
     private Integer getAsyncId(ResolvedExpectedTrace expected) {
@@ -879,7 +894,7 @@ public class PluginVerifierExternalAdaptor implements PluginTestVerifier {
         if (expectedTrace == null) {
             return;
         }
-        Assert.requireNonNull(expectedTrace, "expectedTrace must not be null");
+        Assert.requireNonNull(expectedTrace, "expectedTrace");
         if (waitUnitTime <= 0 || maxWaitTime <= 0) {
             throw new IllegalArgumentException("must be greater than 0");
         }

@@ -52,7 +52,7 @@ public class DefaultLocalAsyncId implements LocalAsyncId {
     @Override
     public int hashCode() {
         int result = asyncId;
-        result = 31 * result + (int) sequence;
+        result = 31 * result + sequence;
         return result;
     }
 

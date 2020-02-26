@@ -51,7 +51,7 @@ import static com.navercorp.pinpoint.plugin.okhttp.OkHttpConstants.OK_HTTP_CLIEN
  */
 @RunWith(PinpointPluginTestSuite.class)
 @PinpointAgent(AgentPath.PATH)
-@Dependency({"com.squareup.okhttp3:okhttp:[3.4.0,)", "org.nanohttpd:nanohttpd:2.3.1"})
+@Dependency({"com.squareup.okhttp3:okhttp:[3.4.0,4.0.0-alpha)", "org.nanohttpd:nanohttpd:2.3.1"})
 public class OkHttpClient_3_4_0_to_3_x_IT {
 
     private static WebServer webServer;
@@ -65,11 +65,7 @@ public class OkHttpClient_3_4_0_to_3_x_IT {
 
     @AfterClass
     public static void AfterClass() throws Exception {
-        final WebServer copy = webServer;
-        if (copy != null) {
-            copy.stop();
-            webServer = null;
-        }
+        webServer = WebServer.cleanup(webServer);
     }
 
     @Test
